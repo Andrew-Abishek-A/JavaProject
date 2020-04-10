@@ -34,20 +34,9 @@
 				</tr>
 			</table>
 		</header>
-		<div>
-			<h3>Dataset Properties:</h3>
-			${requestScope["dataset"]}
-			<br><br>
-			<h3>Evaluation Properties (on trained set):</h3>
-			<p>${requestScope["evaluation"]}</p>
-		</div>
 		<div align='center'>
-			<form action='AlgoServlet' method='post'>
-				<h4>Enter the data to Test model:</h4>
-				${requestScope["inputs"]}
-				<input type="hidden" name="test" value="test"/><br><br>
-				<input type="submit" value="Test Model"/>
-			</form>
+		<h4>${requestScope["message"]}</h4>
+		<a>${requestScope["output"]}</a>
 		</div>
 	</body>
 </html>

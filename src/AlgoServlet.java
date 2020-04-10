@@ -2,6 +2,7 @@
 import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
+import java.util.StringTokenizer;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -9,13 +10,14 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import weka.classifiers.functions.SMO;
-import weka.classifiers.functions.SMOreg;
-
 @WebServlet("/AlgoServlet")
 public class AlgoServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private static final String UPLOAD_DIRECTORY = System.getProperty("user.dir") + File.separator + "uploads";
+	//private static final String TEST_DIRECTORY = System.getProperty("user.dir") + File.separator + "tests";
+	Classification classi = null;
+	Regression reg = null;
+	int flag = 0;
        
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		//response.getWriter().append("Served at: ").append(request.getContextPath());
@@ -89,36 +91,117 @@ public class AlgoServlet extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		//doGet(request, response);
 		//System.out.println(request.getParameter("dropdown"));
-		if(request.getParameter("dropdown").equals("classification")) {
-			//System.out.println(request.getParameter("colc"));
-			String header = request.getParameter("header");
-			int column = Integer.parseInt(request.getParameter("colc"));
-			Classification obj = new Classification();
-			String a = obj.newDataSet(Boolean.parseBoolean(header));
-			SMO smo = obj.loadModel(column);
-			String b = obj.evaluate(smo);
-			
-//			request.setAttribute("dataset", a);
-//			request.setAttribute("evaluation", b);
-//			request.getRequestDispatcher("/result.jsp").forward(request, response);
-		}
-		else if(request.getParameter("dropdown").equals("regression")) {
-			//System.out.println(request.getParameter("colr"));
-			String header = request.getParameter("header");
-			int column = Integer.parseInt(request.getParameter("colr"));
-			Regression obj = new Regression();
-			String a = obj.newDataSet(Boolean.parseBoolean(header));
-			SMOreg reg = obj.loadModel(column);
-			String b = obj.evaluate(reg);
-			//request.setAttribute("dataset", a);
-			//request.setAttribute("evaluation", b);
-			//request.getRequestDispatcher("/result.jsp").forward(request, response);
+		if(request.getParameter("test").equals("test")) {
+			try {
+				if(flag == 1) {
+					int attr = classi.dataset.numAttributes();
+					String data = "";
+					for(int i=0;i<attr-1;i++) {
+						data += request.getParameter(classi.dataset.attribute(i).name()) + ",";
+						//System.out.println(data);
+					}
+					//File file = new File(UPLOAD_DIRECTORY + File.pathSeparator + "test.csv");
+					String output = classi.test(data);
+					//System.out.println(output);
+					StoreToDataBase.store(data,output);
+					request.setAttribute("output", output);
+					request.setAttribute("message", "Classified Class is:");
+					request.getRequestDispatcher("/output.jsp").forward(request, response);
+				}
+				else {
+					int attr = reg.dataset.numAttributes();
+					String data = "";
+					for(int i=0;i<attr-1;i++) {
+						data += request.getParameter(reg.dataset.attribute(i).name()) + ",";
+					}
+					String output = reg.test(data);
+					System.out.println(output);
+					StoreToDataBase.store(data,output);
+					request.setAttribute("output", output);
+					request.setAttribute("message", "Predicted Value is:");
+					request.getRequestDispatcher("/output.jsp").forward(request, response);
+				}
+			}
+			catch(Exception e) {
+				System.out.println("This cause varialble is null: " +e);
+			}
 		}
 		else {
-			request.setAttribute("message", "Select Classification or Regression");
-			doGet(request, response);
+			if(request.getParameter("dropdown").equals("classification")) {
+				//System.out.println(request.getParameter("colc"));
+				String header = request.getParameter("header");
+				int column = Integer.parseInt(request.getParameter("colc"));
+				Classification obj = new Classification();
+				classi = obj;
+				flag = 1;
+				String a = obj.newDataSet(Boolean.parseBoolean(header));
+				obj.loadModel(column);
+				String b = obj.evaluate();
+				StringTokenizer str = new StringTokenizer(a, "\n");
+				String dataset = "";
+				while(str.hasMoreTokens()) {
+					//System.out.println(str.nextToken());
+					dataset += "<pre>"+ str.nextToken() +"</pre>";
+				}
+				str = new StringTokenizer(b, "\n");
+				String eval = "";
+				while(str.hasMoreTokens()) {
+					eval += "<pre>"+ str.nextToken() +"</pre>";
+				}
+				String inputs="";
+				int attr = obj.dataset.numAttributes();
+				for(int i=0;i<attr-1;i++) {
+					inputs += "Enter " + obj.dataset.attribute(i).name() + ": ";
+					if((i+1)%3 != 0)
+						inputs += "<input type=\"text\" name=\""+ obj.dataset.attribute(i).name() +"\"/> ";
+					else
+						inputs += "<input type=\"text\" name=\""+ obj.dataset.attribute(i).name() +"\"/><br><br>";
+				}
+				//System.out.println(inputs);
+				request.setAttribute("inputs", inputs);
+				request.setAttribute("dataset", dataset);
+				request.setAttribute("evaluation", eval);
+				request.getRequestDispatcher("/result.jsp").forward(request, response);
+			}
+			else if(request.getParameter("dropdown").equals("regression")) {
+				//System.out.println(request.getParameter("colr"));
+				String header = request.getParameter("header");
+				int column = Integer.parseInt(request.getParameter("colr"));
+				Regression obj = new Regression();
+				reg = obj;
+				String a = obj.newDataSet(Boolean.parseBoolean(header));
+				obj.loadModel(column);
+				String b = obj.evaluate();
+				StringTokenizer str = new StringTokenizer(a, "\n");
+				String dataset = "";
+				while(str.hasMoreTokens()) {
+					//System.out.println(str.nextToken());
+					dataset += "<pre>"+ str.nextToken() +"</pre>";
+				}
+				str = new StringTokenizer(b, "\n");
+				String eval = "";
+				while(str.hasMoreTokens()) {
+					eval += "<pre>"+ str.nextToken() +"</pre>";
+				}
+				String inputs="";
+				int attr = obj.dataset.numAttributes();
+				for(int i=0;i<attr-1;i++) {
+					inputs += "Enter " + obj.dataset.attribute(i).name() + ": ";
+					if((i+1)%3 != 0)
+						inputs += "<input type=\"text\" name=\""+ obj.dataset.attribute(i).name() +"\"/> ";
+					else
+						inputs += "<input type=\"text\" name=\""+ obj.dataset.attribute(i).name() +"\"/><br><br>";
+				}
+				request.setAttribute("inputs", inputs);
+				request.setAttribute("dataset", dataset);
+				request.setAttribute("evaluation", eval);
+				request.getRequestDispatcher("/result.jsp").forward(request, response);
+			}
+			else {
+				request.setAttribute("message", "Select Classification or Regression");
+				doGet(request, response);
+			}
 		}
-		
 		
 	}
 	

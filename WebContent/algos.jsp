@@ -89,6 +89,7 @@
 					</select>
 				</div>
 				<br><br>
+				<input type="hidden" name="test" value="test1"/>
 				<input type='submit' value='Submit' />
         	</form>
         </div>
