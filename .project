@@ -28,11 +28,4 @@
 		<nature>org.eclipse.jdt.core.javanature</nature>
 		<nature>org.eclipse.wst.jsdt.core.jsNature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>weka-3-7-11</name>
-			<type>2</type>
-			<location>A:/Andrew/Source files for programming/weka-3-7-11</location>
-		</link>
-	</linkedResources>
 </projectDescription>

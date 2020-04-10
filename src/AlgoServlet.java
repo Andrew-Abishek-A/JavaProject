@@ -9,6 +9,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import weka.classifiers.functions.SMO;
+import weka.classifiers.functions.SMOreg;
+
 @WebServlet("/AlgoServlet")
 public class AlgoServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
@@ -91,11 +94,25 @@ public class AlgoServlet extends HttpServlet {
 			String header = request.getParameter("header");
 			int column = Integer.parseInt(request.getParameter("colc"));
 			Classification obj = new Classification();
-			obj.newDataSet(Boolean.parseBoolean(header));
+			String a = obj.newDataSet(Boolean.parseBoolean(header));
+			SMO smo = obj.loadModel(column);
+			String b = obj.evaluate(smo);
+			
+//			request.setAttribute("dataset", a);
+//			request.setAttribute("evaluation", b);
+//			request.getRequestDispatcher("/result.jsp").forward(request, response);
 		}
 		else if(request.getParameter("dropdown").equals("regression")) {
 			//System.out.println(request.getParameter("colr"));
+			String header = request.getParameter("header");
 			int column = Integer.parseInt(request.getParameter("colr"));
+			Regression obj = new Regression();
+			String a = obj.newDataSet(Boolean.parseBoolean(header));
+			SMOreg reg = obj.loadModel(column);
+			String b = obj.evaluate(reg);
+			//request.setAttribute("dataset", a);
+			//request.setAttribute("evaluation", b);
+			//request.getRequestDispatcher("/result.jsp").forward(request, response);
 		}
 		else {
 			request.setAttribute("message", "Select Classification or Regression");
